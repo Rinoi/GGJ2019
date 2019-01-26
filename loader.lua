@@ -70,10 +70,18 @@ function Map:initPhx(world)
       for ib = 1, #layer[ia].objects do
         local obj = layer[ia].objects[ib]
 
-        body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2)
-        shape = love.physics.newRectangleShape(obj.width, obj.height)
-        table.insert(self.phx.fix, love.physics.newFixture(body, shape))
-        print(obj.x)
+        if self.objCreateF then --IF CALLBACK
+          self.objCreateF(obj)
+        else --DEFAULT
+          print(obj.properties.Pig)
+          if obj.properties.Pig == true then
+            body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2, "dynamic")
+          else
+            body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2)
+          end
+          shape = love.physics.newRectangleShape(obj.width, obj.height)
+          table.insert(self.phx.fix, love.physics.newFixture(body, shape, 1))
+        end -- IF callback
       end
     end -- IF
   end

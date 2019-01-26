@@ -8,6 +8,16 @@ ball = {}
 world = {}
 map = {}
 
+function objCreation(obj)
+  if obj.properties.Pig == true then
+    body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2, "dynamic")
+  else
+    body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2)
+  end
+  shape = love.physics.newRectangleShape(obj.width, obj.height)
+  love.physics.newFixture(body, shape, 20)
+end
+
 function love.load()
   love.window.setMode(50*32,40*32)
   -- Grab window size
@@ -16,6 +26,7 @@ function love.load()
 
   print(data.orientation)
   map = loader.loadFromLua(data)
+  map.objCreateF = objCreation
 
   love.physics.setMeter(32)
   world = love.physics.newWorld(0, 0, true)
@@ -27,7 +38,7 @@ function love.load()
   ball.body = love.physics.newBody(world, 20*32/2, 30*32/2, "dynamic") --place the body in the center of the world and make it dynamic, so it can move around
   ball.body:setFixedRotation(true)
   ball.shape = love.physics.newRectangleShape(32, 32)
-  ball.fixture = love.physics.newFixture(ball.body, ball.shape, 1) -- Attach fixture to body and give it a density of 1.
+  ball.fixture = love.physics.newFixture(ball.body, ball.shape, 2) -- Attach fixture to body and give it a density of 1.
   --end
 
   --PART
