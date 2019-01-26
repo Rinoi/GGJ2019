@@ -3,6 +3,7 @@ map = {}
 --sti = require "STI/sti"
 loader = require "loader"
 data = require "map"
+Pig = require "Pig"
 
 ball = {}
 world = {}
@@ -10,12 +11,18 @@ map = {}
 
 function objCreation(obj)
   if obj.properties.Pig == true then
-    body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2, "dynamic")
-  else
+    pig = Pig.newPig(obj)
+    pig.fix:setUserData(pig)
+  elseif obj.properties.collidable == true then
     body = love.physics.newBody(world, obj.x + obj.width / 2, obj.y + obj.height / 2)
+    shape = love.physics.newRectangleShape(obj.width, obj.height)
+    fix = love.physics.newFixture(body, shape, 20)
   end
-  shape = love.physics.newRectangleShape(obj.width, obj.height)
-  love.physics.newFixture(body, shape, 20)
+
+  if obj.properties.Home then
+    --fix:setSensor(true)
+    fix:setUserData({type="Home"})
+  end
 end
 
 function love.load()
@@ -24,12 +31,12 @@ function love.load()
   windowWidth  = love.graphics.getWidth()
   windowHeight = love.graphics.getHeight()
 
-  print(data.orientation)
   map = loader.loadFromLua(data)
   map.objCreateF = objCreation
 
   love.physics.setMeter(32)
   world = love.physics.newWorld(0, 0, true)
+  world:setCallbacks(beginContact, nil, nil, nil)
 
 
   map:initPhx(world)
@@ -39,6 +46,7 @@ function love.load()
   ball.body:setFixedRotation(true)
   ball.shape = love.physics.newRectangleShape(32, 32)
   ball.fixture = love.physics.newFixture(ball.body, ball.shape, 2) -- Attach fixture to body and give it a density of 1.
+  ball.fixture:setUserData({type="Player"})
   --end
 
   --PART
@@ -59,6 +67,37 @@ function love.update(dt)
   end
   if love.keyboard.isDown("down") then
     ball.body:applyLinearImpulse(0, 10)
+  end
+  if love.keyboard.isDown("x") then
+    closer = nil
+    dmin = 0
+
+    Pig.foreach(function(pig)
+      if not closer then
+        closer = pig
+        dmin = pig:distanceFrom(ball.body:getX(), ball.body:getY())
+      else
+        d = pig:distanceFrom(ball.body:getX(), ball.body:getY())
+        if d < dmin then
+          dmin = d
+          closer = pig
+        end
+      end --closer
+    end)
+
+    if dmin < 42 then
+      local vx = closer.body:getX() - ball.body:getX()
+      local vy = closer.body:getY() - ball.body:getY()
+      closer.body:applyLinearImpulse(vx * 100, vy * 100)
+    end
+  end
+
+  for _, body in pairs(world:getBodies()) do
+    vx, vy = body:getLinearVelocity()
+
+    vx = vx * (0.95)
+    vy = vy * (0.95)
+    body:setLinearVelocity(vx, vy)
   end
 
 end
@@ -93,3 +132,24 @@ function love.draw()
   end
   --END
 end
+
+
+
+--COLIDER
+
+function beginContact(a, b, coll)
+
+  if a:getUserData() and a:getUserData().type and
+     b:getUserData() and b:getUserData().type then
+    print("a : "..a:getUserData().type)
+    print("b : "..b:getUserData().type)
+
+    if a:getUserData().type == "Pig" and b:getUserData().type == "Home" then
+      Pig.del(a:getUserData())
+      print("DELETE")
+    end
+  end
+
+end
+
+--END

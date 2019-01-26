@@ -147,6 +147,7 @@
  <objectgroup id="5" name="Collider">
   <object id="5" x="768" y="512" width="96" height="96">
    <properties>
+    <property name="Home" type="bool" value="true"/>
     <property name="collidable" type="bool" value="true"/>
    </properties>
   </object>
